@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BA3TOUS-SPORTS | Ultra 4K Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.min.js"></script>
+    <style>
+        :root {
+            --primary: #a855f7;
+            --primary-glow: rgba(168, 85, 247, 0.4);
+            --bg-dark: #050208;
+            --panel-bg: rgba(20, 15, 25, 0.96);
+            --text-main: #f8f5ff;
+            --text-dim: #7c7289;
+            --accent-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 340px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid #1f1a29;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 0 25px 20px;
+            border-bottom: 1px solid #1f1a29;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .channel-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 15px;
+        }
+
+        /* Custom Scrollbar */
+        .channel-list::-webkit-scrollbar { width: 6px; }
+        .channel-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        .channel-list::-webkit-scrollbar-thumb { 
+            background: var(--primary); 
+            border-radius: 10px; 
+            border: 2px solid var(--panel-bg);
+        }
+
+        .group-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 20px 10px 10px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: #b0a8ba;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover { background: rgba(168, 85, 247, 0.08); color: #fff; }
+        .btn.active {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.3);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .quality-badge {
+            font-size: 0.6rem;
+            background: #1a1523;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-dim);
+            border: 1px solid #2d263a;
+        }
+
+        .btn.active .quality-badge { background: var(--primary); color: #fff; }
+
+        /* Main Player Section */
+        .main-player {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at 50% 50%, #120a1e 0%, #050208 100%);
+            position: relative;
+        }
+
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        video {
+            width: 100%;
+            max-width: 1300px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.9), 0 0 40px rgba(168, 85, 247, 0.1);
+            outline: none;
+        }
+
+        .player-footer {
+            height: 100px;
+            background: rgba(5, 2, 8, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            justify-content: space-between;
+            border-top: 1px solid #1f1a29;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); opacity: 1; }
+            70% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(0.95); opacity: 0; }
+        }
+
+        .controls-hint {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            background: #1a1523;
+            padding: 8px 18px;
+            border-radius: 30px;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; order: 2; border-right: none; }
+            .main-player { width: 100%; height: auto; order: 1; position: sticky; top: 0; z-index: 100; }
+            .video-container { padding: 10px; }
+            video { border-radius: 0; }
+            .player-footer { padding: 15px; height: auto; flex-direction: column; align-items: flex-start; gap: 8px; }
+            .controls-hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">BA3TOUS-SPORTS</div>
+    </div>
+    <div class="channel-list" id="list-container"></div>
+</div>
+
+<div class="main-player">
+    <div class="video-container">
+        <video id="videoPlayer" controls autoplay playsinline></video>
+    </div>
+    <div class="player-footer">
+        <div class="current-info">
+            <div class="live-indicator"><div class="pulse"></div> Live Broadcast</div>
+            <h1 id="active-title" style="margin:0; font-size:1.3rem;">Select a stream</h1>
+        </div>
+        <div class="controls-hint"><b>ARROWS</b>: ±5s &nbsp; | &nbsp; <b>STABILITY</b>: 10s Buffer</div>
+    </div>
+</div>
+
+<script>
+    const baseUrl = "http://xlion.net:8080/live/Clinetcaca/YeAlqDTUc9/";
+    
+    const channels4K = {
+        "beIN 4K GLOBAL": "22186", "beIN SPORTS 1 4K": "318197",
+        "beIN SPORTS 2 4K": "318198", "beIN SPORTS 3 4K": "318199",
+        "beIN SPORTS 4 4K": "440580", "beIN SPORTS 5 4K": "318201",
+        "beIN SPORTS 6 4K": "318202", "beIN SPORTS 7 4K": "318203",
+        "beIN SPORTS 8 4K": "318204", "beIN SPORTS 9 4K": "318205"
+    };
+
+    const channelsHD = {
+        "beIN Sports 1": "325793", "beIN Sports 2": "325794",
+        "beIN Sports 3": "325795", "beIN Sports 4": "325796",
+        "beIN Sports 5": "325797", "beIN Sports 6" : "325798",
+        "beIN Sports 7": "325799", "beIN Sports 8" : "325800",
+        "beIN Sports 9": "325801"
+    };
+
+    const container = document.getElementById('list-container');
+    let mpegPlayer = null;
+    const video = document.getElementById('videoPlayer');
+    const title = document.getElementById('active-title');
+
+    function createList(data, label, quality) {
+        const span = document.createElement('span');
+        span.className = 'group-label';
+        span.innerText = label;
+        container.appendChild(span);
+
+        for (let name in data) {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = `${name} <span class="quality-badge">${quality}</span>`;
+            btn.onclick = () => playStream(baseUrl + data[name] + ".ts", name, btn);
+            container.appendChild(btn);
+        }
+    }
+
+    function playStream(url, name, el) {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        title.innerText = name;
+        if (mpegPlayer) { mpegPlayer.destroy(); }
+
+        mpegPlayer = mpegts.createPlayer({ type: 'mse', isLive: true, url: url }, {
+            enableStashBuffer: true,
+            stashInitialSize: 512,
+            liveBufferLatencyChasing: true,
+            liveBufferLatencyMaxLatency: 10,
+            liveBufferLatencyMinLatency: 4,
+            enableWorker: true
+        });
+
+        mpegPlayer.attachMediaElement(video);
+        mpegPlayer.load();
+        mpegPlayer.play();
+    }
+
+    createList(channels4K, "Ultra HD 4K", "4K");
+    createList(channelsHD, "High Definition", "HD");
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "ArrowLeft") video.currentTime -= 5;
+        if (e.key === "ArrowRight") video.currentTime += 5;
+    });
+</script>
+</body>
+</html>
